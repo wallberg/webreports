@@ -17,6 +17,23 @@ import org.apache.log4j.PatternLayout
 import org.apache.log4j.ConsoleAppender
 import org.apache.log4j.Priority
 
+/**
+ * Generate usage for report for /www files combined with urls from apache logs.
+ * 
+ * Report CSV file fields:
+ * <pre>
+ *   File
+ *   Last Modified
+ *   URL*
+ *   result code
+ *   hits
+ *   hits/browser
+ *   hits/bot
+ * </pre>
+ * 
+ * @author wallberg
+ *
+ */
 class Usage {
 
   static Logger log = Logger.getInstance(Usage.class)
@@ -41,7 +58,7 @@ class Usage {
 
       // Initialize UserAgent
       UserAgent.readConfig(false)
-      
+
       // Process each log file
       logFileNames.each { fileName ->
         File f = new File(fileName)
@@ -51,12 +68,16 @@ class Usage {
         } else {
           stat.files++
 
+          log.info("reading $f")
+
+          // open file for buffered reading
           InputStream is = new FileInputStream(f)
           if (f.name.endsWith(".gz")) {
             is = new GZIPInputStream(is)
           }
           BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"))
 
+          // process each log file line
           r.eachLine { line ->
             stat.lines++
 
@@ -73,19 +94,19 @@ class Usage {
               ua = ua.toLowerCase()
 
               // url fixup
-              url = url
-                  .replaceAll(/\?.*$/,'')
-//                  .toLowerCase()
+              String normUrl = url
+              .replaceAll(/\?.*$/,'')
+              //                  .toLowerCase()
 
-//              // filter
-//              if (! reject(url, code, ua)) {
-//                dst.write(l)
-//                dst.write("\n")
-//                count.write++
-//              } else if (rej) {
-//                rej.write(l)
-//                rej.write("\n")
-//              }
+              //              // filter
+              //              if (! reject(url, code, ua)) {
+              //                dst.write(l)
+              //                dst.write("\n")
+              //                count.write++
+              //              } else if (rej) {
+              //                rej.write(l)
+              //                rej.write("\n")
+              //              }
             }
           }
 
@@ -171,8 +192,8 @@ Statistics:
 
           // url fixup
           url = url
-              .replaceAll(/\?.*$/,'')
-              .toLowerCase()
+          .replaceAll(/\?.*$/,'')
+          .toLowerCase()
 
           // filter
           if (! reject(url, code, ua)) {
