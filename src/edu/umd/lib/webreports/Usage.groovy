@@ -40,12 +40,15 @@ class Usage {
 
   // statistics
   static Map stat = [
+    'dirs':0,
+    'dirfiles':0,
     'files':0,
     'lines':0,
     'errors':0,
   ]
 
-  static List logFileNames
+  static List logFileNames = null
+  static File dir = null
 
   public static void main(args) {
     try {
@@ -59,61 +62,13 @@ class Usage {
       // Initialize UserAgent
       UserAgent.readConfig(false)
 
-      // Process each log file
-      logFileNames.each { fileName ->
-        File f = new File(fileName)
-
-        if (! f.canRead()) {
-          log.warn("Unable to read ${f}")
-        } else {
-          stat.files++
-
-          log.info("reading $f")
-
-          // open file for buffered reading
-          InputStream is = new FileInputStream(f)
-          if (f.name.endsWith(".gz")) {
-            is = new GZIPInputStream(is)
-          }
-          BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"))
-
-          // process each log file line
-          r.eachLine { line ->
-            stat.lines++
-
-            Matcher m = (line =~ /^([^ ]+?) ([^ ]+?) ([^ ]+?) \[(.*?)\] "(?:[A-Z]+? )?(.+?)(?: .+?)?(?<!\\)" (\d{3}) ([^ ]+) "(.*?)(?<!\\)" "(.*?)(?<!\\)"$/)
-
-            if (! m.matches()) {
-              log.error("line doesn't match: ${line}")
-              count.errors++
-            } else {
-
-              def (all,host,foo0,foo1,date,url,code,bytes,referer,ua) = m[0]
-
-              // ua fixup
-              ua = ua.toLowerCase()
-
-              // url fixup
-              String normUrl = url
-              .replaceAll(/\?.*$/,'')
-              //                  .toLowerCase()
-
-              //              // filter
-              //              if (! reject(url, code, ua)) {
-              //                dst.write(l)
-              //                dst.write("\n")
-              //                count.write++
-              //              } else if (rej) {
-              //                rej.write(l)
-              //                rej.write("\n")
-              //              }
-            }
-          }
-
-          r.close()
-
-        }
+      // directory of web files
+      if (dir != null) {
+        processDir()
       }
+
+      // apache log files
+      processLogFiles()
 
     }
     catch (Exception e) {
@@ -123,6 +78,11 @@ class Usage {
     finally {
       println """
 Statistics:
+
+  directory:
+    subdirs:      ${stat.dirs}
+    files:        ${stat.dirfiles}
+
   log files
     files read:   ${stat.files} 
     lines read:   ${stat.lines}
@@ -132,6 +92,82 @@ Statistics:
 
     System.exit(0)
   }
+
+  /**
+   * Traverse files in the directory
+   */
+  public static void processDir() {
+    dir.traverse(sort:{a,b->a.name<=>b.name}) { file ->
+      if (file.isDirectory()) {
+        stat.dirs++
+      } else {
+        stat.dirfiles++
+      }
+    }
+  }
+
+  /**
+   * Read log lines from each log file.
+   */
+
+  public static void processLogFiles() {
+    // Process each log file
+    logFileNames.each { fileName ->
+      File f = new File(fileName)
+
+      if (! f.canRead()) {
+        log.warn("Unable to read ${f}")
+      } else {
+        stat.files++
+
+        log.info("reading $f")
+
+        // open file for buffered reading
+        InputStream is = new FileInputStream(f)
+        if (f.name.endsWith(".gz")) {
+          is = new GZIPInputStream(is)
+        }
+        BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"))
+
+        // process each log file line
+        r.eachLine { line ->
+          stat.lines++
+
+          Matcher m = (line =~ /^([^ ]+?) ([^ ]+?) ([^ ]+?) \[(.*?)\] "(?:[A-Z]+? )?(.+?)(?: .+?)?(?<!\\)" (\d{3}) ([^ ]+) "(.*?)(?<!\\)" "(.*?)(?<!\\)"$/)
+
+          if (! m.matches()) {
+            log.error("line doesn't match: ${line}")
+            count.errors++
+          } else {
+
+            def (all,host,foo0,foo1,date,url,code,bytes,referer,ua) = m[0]
+
+            // ua fixup
+            ua = ua.toLowerCase()
+
+            // url fixup
+            String normUrl = url
+                .replaceAll(/\?.*$/,'')
+            //                  .toLowerCase()
+
+            //              // filter
+            //              if (! reject(url, code, ua)) {
+            //                dst.write(l)
+            //                dst.write("\n")
+            //                count.write++
+            //              } else if (rej) {
+            //                rej.write(l)
+            //                rej.write("\n")
+            //              }
+          }
+        }
+
+        r.close()
+
+      }
+    }
+  }
+
 
   /**********************************************************************/
   /*
@@ -192,8 +228,8 @@ Statistics:
 
           // url fixup
           url = url
-          .replaceAll(/\?.*$/,'')
-          .toLowerCase()
+              .replaceAll(/\?.*$/,'')
+              .toLowerCase()
 
           // filter
           if (! reject(url, code, ua)) {
@@ -259,9 +295,9 @@ Statistics:
     // Setup the options
     Options options = new Options()
 
-    //    Option option = new Option("s", "site", true, "site to transfer logs from")
-    //    option.setRequired(true)
-    //    options.addOption(option)
+    Option option = new Option("i", "directory", true, "input directory")
+    option.setRequired(false)
+    options.addOption(option)
 
     // Check for help
     if ("-h" in args) {
@@ -282,10 +318,17 @@ Statistics:
 
     // Validate results
     logFileNames = cmd.getArgList()
+
+    if (cmd.hasOption('i')) {
+      dir = new File(cmd.getOptionValue('i'))
+      if (!dir.isDirectory() || !dir.canRead()) {
+        printUsage(options, "Unable to open directory '$dir' for reading");
+      }
+    }
   }
 
   /*
-   * Print program usage.
+   * Print program usage and exit.
    */
 
   static void printUsage(Options options, Object[] args) {
@@ -294,7 +337,7 @@ Statistics:
     if (args.size() != 0) { println '' }
 
     HelpFormatter formatter = new HelpFormatter()
-    formatter.printHelp("getLogs [-h] <apache log>...\n", options)
+    formatter.printHelp("getLogs [-i <directory>] [-h] <apache log>...\n", options)
 
     System.exit(1)
   }
