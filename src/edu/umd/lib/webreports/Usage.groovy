@@ -5,6 +5,8 @@ import java.util.zip.GZIPOutputStream
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
+import java.text.SimpleDateFormat
+
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Option
@@ -50,6 +52,8 @@ class Usage {
   static List logFileNames = null
   static File dir = null
 
+  static final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd")
+
   public static void main(args) {
     try {
 
@@ -69,6 +73,10 @@ class Usage {
 
       // apache log files
       processLogFiles()
+      
+      Entry.entries.each { k,e ->
+        log.info(e)
+      }
 
     }
     catch (Exception e) {
@@ -103,6 +111,11 @@ Statistics:
       } else {
         stat.dirfiles++
       }
+
+      Entry e = new Entry()
+      e.file = file
+
+      Entry.add(file)
     }
   }
 
@@ -159,6 +172,8 @@ Statistics:
             //                rej.write(l)
             //                rej.write("\n")
             //              }
+
+            Entry.add(url, code, UserAgent.isBrowser(ua))
           }
         }
 
@@ -340,5 +355,50 @@ Statistics:
     formatter.printHelp("getLogs [-i <directory>] [-h] <apache log>...\n", options)
 
     System.exit(1)
+  }
+
+  static class Entry {
+
+    static Map entries = [:]
+
+    String key = null
+    File file = null
+    String url = null
+    String result = null
+    int browser = 0  // number of browser hits
+    int bot = 0      // number of bot hits
+
+    static void add(File file) {
+      Entry e = new Entry()
+      e.key = file.absolutePath
+      e.file = file
+      entries[e.key] = e
+    }
+
+    static void add(String url, String result, isBrowser) {
+      String key = url
+
+      Entry e
+      if (key in entries) {
+        e = entries[key]
+      } else {
+        e = new Entry()
+        e.key = key
+        e.url = url
+        e.result = result
+        entries[key] = e
+      }
+
+      if (isBrowser) {
+        e.browser++
+      } else {
+        e.bot++
+      }
+    }
+
+    public String toString() {
+      final String lastModified = (file == null ? "" : df.format(new Date(file.lastModified())))
+      return "File: $file ($lastModified), URL: $url ($result), hits: ${browser}/$bot"
+    }
   }
 }
