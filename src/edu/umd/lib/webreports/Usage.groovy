@@ -47,10 +47,12 @@ class Usage {
     'files':0,
     'lines':0,
     'errors':0,
+    'rows':0,
   ]
 
   static List logFileNames = null
   static File dir = null
+  static File csv = null
 
   static final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd")
 
@@ -73,11 +75,25 @@ class Usage {
 
       // apache log files
       processLogFiles()
-      
-      Entry.entries.each { k,e ->
-        log.info(e)
-      }
 
+      // write output file
+      if (csv != null) {
+        log.info("writing $csv")
+        PrintWriter w = new PrintWriter(new FileOutputStream(csv))
+
+        // header        
+        w.println('"File","Last Modified","URL","Result Code","Total Hits","Browser Hits","Bot Hits"')
+
+        Entry.entries.each { k,e ->
+          log.debug(e)
+
+          w.println(e.csvRow.collect { v -> '"' + v.replaceAll("\"","\"\"") + '"'}.join(','))
+          
+          stat.rows++
+        }
+
+        w.close()
+      }
     }
     catch (Exception e) {
       e.printStackTrace();
@@ -95,6 +111,9 @@ Statistics:
     files read:   ${stat.files} 
     lines read:   ${stat.lines}
     parse errors: ${stat.errors}
+
+  csv outfile
+    rows:         ${stat.rows}
 """
     }
 
@@ -105,6 +124,8 @@ Statistics:
    * Traverse files in the directory
    */
   public static void processDir() {
+    log.info("traversing $dir")
+    
     dir.traverse(sort:{a,b->a.name<=>b.name}) { file ->
       if (file.isDirectory()) {
         stat.dirs++
@@ -314,6 +335,10 @@ Statistics:
     option.setRequired(false)
     options.addOption(option)
 
+    option = new Option("o", "outfile", true, "output CSV file")
+    option.setRequired(false)
+    options.addOption(option)
+
     // Check for help
     if ("-h" in args) {
       printUsage(options)
@@ -340,6 +365,10 @@ Statistics:
         printUsage(options, "Unable to open directory '$dir' for reading");
       }
     }
+
+    if (cmd.hasOption('o')) {
+      csv = new File(cmd.getOptionValue('o'))
+    }
   }
 
   /*
@@ -352,7 +381,7 @@ Statistics:
     if (args.size() != 0) { println '' }
 
     HelpFormatter formatter = new HelpFormatter()
-    formatter.printHelp("getLogs [-i <directory>] [-h] <apache log>...\n", options)
+    formatter.printHelp("getLogs [-i <directory>] [-o <outfile>] [-h] <apache log>...\n", options)
 
     System.exit(1)
   }
@@ -394,6 +423,21 @@ Statistics:
       } else {
         e.bot++
       }
+    }
+
+    /**
+     * Get a row for CSV file.
+     */
+    public List getCsvRow() {
+      return [
+        (file == null ? "" : file.toString()),
+        (file == null ? "" : df.format(new Date(file.lastModified()))),
+        url ?: "",
+        result ?: "",
+        "${browser + bot}",
+        "$browser",
+        "$bot",
+      ]
     }
 
     public String toString() {
