@@ -48,6 +48,9 @@ class Usage {
     'lines':0,
     'errors':0,
     'rows':0,
+    'matched':0,
+    'fileonly':0,
+    'urlonly':0,
   ]
 
   static List logFileNames = null
@@ -82,13 +85,14 @@ class Usage {
         PrintWriter w = new PrintWriter(new FileOutputStream(csv))
 
         // header
-        w.println('"File","Last Modified","URL","Result Code","Total Hits","Browser Hits","Bot Hits"')
+        w.println('"Match Type","File","Last Modified","URL","Total Hits","Browser Hits","Bot Hits"')
 
         Entry.entries.each { k,e ->
           log.debug(e)
-          
-          w.println(e.csvRow.collect { v -> '"' + v.replaceAll("\"","\"\"") + '"'}.join(','))
+          List row = e.csvRow
+          w.println(row.collect { v -> '"' + v.replaceAll("\"","\"\"") + '"'}.join(','))
 
+          stat[row[0]]++
           stat.rows++
         }
 
@@ -113,7 +117,10 @@ Statistics:
     parse errors: ${stat.errors}
 
   csv outfile
-    rows:         ${stat.rows}
+    total rows:   ${stat.rows}
+    matched:      ${stat.matched}
+    file only:    ${stat.fileonly}
+    url only:     ${stat.urlonly}
 """
     }
 
@@ -318,10 +325,10 @@ Statistics:
      */
     public List getCsvRow() {
       return [
+        ((file != null) ? (url != null ? "matched" : "fileonly") : "urlonly"),
         (file == null ? "" : key),
         (file == null ? "" : df.format(new Date(file.lastModified()))),
         url ?: "",
-        result ?: "",
         "${browser + bot}",
         "$browser",
         "$bot",
