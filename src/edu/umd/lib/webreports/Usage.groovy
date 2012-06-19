@@ -81,14 +81,14 @@ class Usage {
         log.info("writing $csv")
         PrintWriter w = new PrintWriter(new FileOutputStream(csv))
 
-        // header        
+        // header
         w.println('"File","Last Modified","URL","Result Code","Total Hits","Browser Hits","Bot Hits"')
 
         Entry.entries.each { k,e ->
           log.debug(e)
-
-          w.println(e.csvRow.collect { v -> '"' + v.replaceAll("\"","\"\"") + '"'}.join(','))
           
+          w.println(e.csvRow.collect { v -> '"' + v.replaceAll("\"","\"\"") + '"'}.join(','))
+
           stat.rows++
         }
 
@@ -125,7 +125,7 @@ Statistics:
    */
   public static void processDir() {
     log.info("traversing $dir")
-    
+
     dir.traverse(sort:{a,b->a.name<=>b.name}) { file ->
       if (file.isDirectory()) {
         stat.dirs++
@@ -281,13 +281,16 @@ Statistics:
 
     static void add(File file) {
       Entry e = new Entry()
-      e.key = file.absolutePath
+      e.key = file.absolutePath.replace('/www','').toLowerCase()
       e.file = file
       entries[e.key] = e
     }
 
     static void add(String url, String result, isBrowser) {
-      String key = url
+      String key = url.toLowerCase()
+      if (key.endsWith('/')) {
+        key += "index.html"
+      }
 
       Entry e
       if (key in entries) {
@@ -295,9 +298,12 @@ Statistics:
       } else {
         e = new Entry()
         e.key = key
+        entries[key] = e
+      }
+
+      if (e.url == null) {
         e.url = url
         e.result = result
-        entries[key] = e
       }
 
       if (isBrowser) {
@@ -312,7 +318,7 @@ Statistics:
      */
     public List getCsvRow() {
       return [
-        (file == null ? "" : file.toString()),
+        (file == null ? "" : key),
         (file == null ? "" : df.format(new Date(file.lastModified()))),
         url ?: "",
         result ?: "",
@@ -324,7 +330,7 @@ Statistics:
 
     public String toString() {
       final String lastModified = (file == null ? "" : df.format(new Date(file.lastModified())))
-      return "File: $file ($lastModified), URL: $url ($result), hits: ${browser}/$bot"
+      return "Key: $key, File: $file ($lastModified), URL: $url ($result), hits: ${browser}/$bot"
     }
   }
 }
