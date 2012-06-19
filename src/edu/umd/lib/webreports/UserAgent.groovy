@@ -25,12 +25,12 @@ public class UserAgent {
   String desc
   List   types
   String comment
-  
-  private static auths = []
-  private static db = new File('data/allagents.xml')
-  private static dbNew = new File('data/allagents-new.xml')
-  
-  private static log = Logger.getInstance(UserAgent.class)
+
+  private static List auths = []
+  private static File db = new File('data/allagents.xml')
+  private static File dbNew = new File('data/allagents-new.xml')
+
+  private static Logger log = Logger.getInstance(UserAgent.class)
 
 
   /**
@@ -66,7 +66,7 @@ public class UserAgent {
         def b = new byte[1024]
         while (digest.read(b,0,1024) != -1) {}
         digest.close()
-        
+
         if (digest.messageDigest.digest() == digestNew.messageDigest.digest()) {
           log.info("...file has not changed")
           dbNew.delete()
@@ -94,15 +94,27 @@ public class UserAgent {
 
 
   /**
-   * Read authoritative user agent list 
+   * Read authoritative user agent list, retrieve latest user agent db file
    */
 
   public static readConfig() {
-    downloadDb()
+    readConfig(true)
+  }
 
+  /**
+   * Read authoritative user agent list 
+   * 
+   * @param checkUpdate - check for an update to the user agent db file
+   */
+
+  public static readConfig(boolean checkUpdate) {
+    if (checkUpdate || ! db.canRead()) {
+      downloadDb()
+    }
+    
     def reader = new SAXReader()
     def doc = reader.read(db)
-    doc.selectNodes("/user-agents/user-agent").each { node -> 
+    doc.selectNodes("/user-agents/user-agent").each { node ->
       auths.add(newInstance(node))
     }
   }
@@ -189,9 +201,9 @@ public class UserAgent {
   private static String uaNormalize(s) {
     if (! uaNormCache.containsKey(s)) {
       uaNormCache[s] = s
-      .toLowerCase()
-      .replaceAll(/; feed-id=\d+/,'')
-      .replaceAll(/^.*compatible;+/,'')
+          .toLowerCase()
+          .replaceAll(/; feed-id=\d+/,'')
+          .replaceAll(/^.*compatible;+/,'')
     }
 
     return uaNormCache[s]

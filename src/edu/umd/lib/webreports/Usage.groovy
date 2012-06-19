@@ -40,7 +40,7 @@ class Usage {
       Properties p = System.properties
 
       // Initialize UserAgent
-      UserAgent.readConfig()
+      UserAgent.readConfig(false)
       
       // Process each log file
       logFileNames.each { fileName ->
