@@ -317,7 +317,16 @@ Statistics:
         url = url.substring(0,n)
       }
 
-      String key = URLDecoder.decode(url,'UTF-8').toLowerCase()
+      String key = null
+      try {
+        key = URLDecoder.decode(url,'UTF-8')
+      }
+      catch (Exception e) {
+        key = url
+      }
+
+      key = key.toLowerCase()
+
       if (key.endsWith('/')) {
         key += "index.html"
       }
