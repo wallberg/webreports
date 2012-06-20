@@ -167,6 +167,7 @@ Statistics:
    */
 
   final static Pattern parser = ~/^([^ ]+?) ([^ ]+?) ([^ ]+?) \[(.*?)\] "(?:[A-Z]+? )?(.+?)(?: .+?)?(?<!\\)" (\d{3}) ([^ ]+) "(.*?)(?<!\\)" "(.*?)(?<!\\)"$/
+  final static Pattern ignoreUrls = ~/^\/(archivesum|blogs|cgi-bin|digital|drum)/
 
   public static void processLogFiles() {
     // Process each log file
@@ -200,25 +201,27 @@ Statistics:
 
             def (all,host,foo0,foo1,date,url,code,bytes,referer,ua) = m[0]
 
-            // ua fixup
-            ua = ua.toLowerCase()
+            if (! (ignoreUrls.matcher(url).find())) {
+              // ua fixup
+              ua = ua.toLowerCase()
 
-            // url fixup
-            String normUrl = url
-                .replaceAll(/\?.*$/,'')
-            //                  .toLowerCase()
+              // url fixup
+              String normUrl = url
+                  .replaceAll(/\?.*$/,'')
+              //                  .toLowerCase()
 
-            //              // filter
-            //              if (! reject(url, code, ua)) {
-            //                dst.write(l)
-            //                dst.write("\n")
-            //                count.write++
-            //              } else if (rej) {
-            //                rej.write(l)
-            //                rej.write("\n")
-            //              }
+              //              // filter
+              //              if (! reject(url, code, ua)) {
+              //                dst.write(l)
+              //                dst.write("\n")
+              //                count.write++
+              //              } else if (rej) {
+              //                rej.write(l)
+              //                rej.write("\n")
+              //              }
 
-            Entry.add(url, code, UserAgent.isBrowser(ua))
+              Entry.add(url, code, UserAgent.isBrowser(ua))
+            }
           }
         }
 
