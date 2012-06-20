@@ -1,5 +1,7 @@
 package edu.umd.lib.webreports
 
+import groovy.io.FileVisitResult;
+
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import java.util.regex.Matcher
@@ -128,24 +130,36 @@ Statistics:
     System.exit(0)
   }
 
+  static final Set ignoreDirs = ['_baks','_notes','.DS_Store'] as Set
+  static final Set ignoreFiles = [] as Set
+
   /**
    * Traverse files in the directory
    */
   public static void processDir() {
     log.info("traversing $dir")
 
-    dir.traverse(sort:{a,b->a.name<=>b.name}) { file ->
-      if (file.isDirectory()) {
-        stat.dirs++
-      } else {
-        stat.dirfiles++
-      }
+    dir.traverse(
+        sort:   { a,b -> a.name<=>b.name },
+        preDir: { if (it.name in ignoreDirs) return FileVisitResult.SKIP_SUBTREE },
+        postDir: { stat.dirs++ },
+        ) { file ->
 
-      Entry e = new Entry()
-      e.file = file
+          if (! file.isDirectory()) {
+            if (file.name in ignoreFiles) {
+              return FileVisitResult.CONTINUE
+            } else {
+              stat.dirfiles++
+            }
+          }
 
-      Entry.add(file)
-    }
+          Entry e = new Entry()
+          e.file = file
+
+          Entry.add(file)
+
+          return FileVisitResult.CONTINUE
+        }
   }
 
   /**
