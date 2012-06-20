@@ -4,6 +4,7 @@ import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import java.util.TreeMap
 
 import java.text.SimpleDateFormat
 
@@ -277,7 +278,7 @@ Statistics:
 
   static class Entry {
 
-    static Map entries = [:]
+    static Map entries = new TreeMap()
 
     String key = null
     File file = null
