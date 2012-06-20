@@ -130,7 +130,7 @@ Statistics:
     System.exit(0)
   }
 
-  static final Set ignoreDirs = ['_baks','_notes','.DS_Store'] as Set
+  static final Set ignoreDirs = ['_baks','_notes','.DS_Store','JUNK'] as Set
   static final Set ignoreFiles = [] as Set
 
   /**
@@ -167,7 +167,7 @@ Statistics:
    */
 
   final static Pattern parser = ~/^([^ ]+?) ([^ ]+?) ([^ ]+?) \[(.*?)\] "(?:[A-Z]+? )?(.+?)(?: .+?)?(?<!\\)" (\d{3}) ([^ ]+) "(.*?)(?<!\\)" "(.*?)(?<!\\)"$/
-  final static Pattern ignoreUrls = ~/^\/(archivesum|blogs|cgi-bin|digital|drum)/
+  final static Pattern ignoreUrls = ~/(^\/(archivesum|blogs|cgi-bin|digital|drum)|(\/JUNK\/))/
 
   public static void processLogFiles() {
     // Process each log file
