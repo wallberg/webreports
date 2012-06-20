@@ -42,15 +42,15 @@ class Usage {
 
   // statistics
   static Map stat = [
-    'dirs':0,
-    'dirfiles':0,
-    'files':0,
-    'lines':0,
-    'errors':0,
-    'rows':0,
-    'matched':0,
-    'fileonly':0,
-    'urlonly':0,
+    'dirs':0l,
+    'dirfiles':0l,
+    'files':0l,
+    'lines':0l,
+    'errors':0l,
+    'rows':0l,
+    'matched':0l,
+    'fileonly':0l,
+    'urlonly':0l,
   ]
 
   static List logFileNames = null
