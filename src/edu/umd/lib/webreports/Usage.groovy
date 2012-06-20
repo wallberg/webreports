@@ -329,7 +329,7 @@ Statistics:
     public List getCsvRow() {
       return [
         ((file != null) ? (url != null ? "matched" : "fileonly") : "urlonly"),
-        (file == null ? "" : key),
+        (file == null ? "" : file.absolutePath.replace('/www','')),
         (file == null ? "" : df.format(new Date(file.lastModified()))),
         url ?: "",
         "${browser + bot}",
