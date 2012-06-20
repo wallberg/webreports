@@ -311,6 +311,11 @@ Statistics:
     }
 
     static void add(String url, String result, isBrowser) {
+      int n = url.indexOf('?')
+      if (n != -1) {
+        url = url.substring(0,n)
+      }
+
       String key = url.toLowerCase()
       if (key.endsWith('/')) {
         key += "index.html"
