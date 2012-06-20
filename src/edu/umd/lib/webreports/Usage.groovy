@@ -132,7 +132,7 @@ Statistics:
     System.exit(0)
   }
 
-  static final Set ignoreDirs = ['_baks','_notes','.DS_Store','JUNK'] as Set
+  static final Set ignoreDirs = ['_baks','_notes','.DS_Store','JUNK','blogs','staff','old_projects','.svn','DB'] as Set
   static final Set ignoreFiles = [] as Set
 
   /**
