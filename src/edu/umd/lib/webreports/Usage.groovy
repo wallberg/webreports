@@ -90,7 +90,7 @@ class Usage {
         PrintWriter w = new PrintWriter(new FileOutputStream(csv))
 
         // header
-        w.println('"Match Type","File","Last Modified","URL","Total Hits","Browser Hits","Bot Hits"')
+        w.println('"Match Type","File","Last Modified","URL","Result Codes","Total Hits","Browser Hits","Bot Hits"')
 
         Entry.entries.each { k,e ->
           log.debug(e)
@@ -142,26 +142,22 @@ Statistics:
     log.info("traversing $dir")
 
     dir.traverse(
-        sort:   { a,b -> a.name<=>b.name },
-        preDir: { if (it.name in ignoreDirs) return FileVisitResult.SKIP_SUBTREE },
-        postDir: { stat.dirs++ },
-        ) { file ->
+    sort:   { a,b -> a.name<=>b.name },
+    preDir: { if (it.name in ignoreDirs) return FileVisitResult.SKIP_SUBTREE },
+    postDir: { stat.dirs++ },
+    ) { file ->
 
-          if (! file.isDirectory()) {
-            if (file.name in ignoreFiles) {
-              return FileVisitResult.CONTINUE
-            } else {
-              stat.dirfiles++
-            }
-          }
+      if (file.isDirectory() || file.name in ignoreFiles) {
+        return
+      }
 
-          Entry e = new Entry()
-          e.file = file
+      stat.dirfiles++
 
-          Entry.add(file)
+      Entry e = new Entry()
+      e.file = file
 
-          return FileVisitResult.CONTINUE
-        }
+      Entry.add(file)
+    }
   }
 
   /**
@@ -209,7 +205,7 @@ Statistics:
 
               // url fixup
               String normUrl = url
-                  .replaceAll(/\?.*$/,'')
+              .replaceAll(/\?.*$/,'')
               //                  .toLowerCase()
 
               //              // filter
@@ -304,7 +300,7 @@ Statistics:
     String key = null
     File file = null
     String url = null
-    String result = null
+    Set result = [] as Set
     int browser = 0  // number of browser hits
     int bot = 0      // number of bot hits
 
@@ -337,7 +333,7 @@ Statistics:
 
       if (e.url == null) {
         e.url = url
-        e.result = result
+        e.result.add(result)
       }
 
       if (isBrowser) {
@@ -356,6 +352,7 @@ Statistics:
         (file == null ? "" : file.absolutePath.replace('/www','')),
         (file == null ? "" : df.format(new Date(file.lastModified()))),
         url ?: "",
+        result.join(','),
         "${browser + bot}",
         "$browser",
         "$bot",
@@ -364,7 +361,7 @@ Statistics:
 
     public String toString() {
       final String lastModified = (file == null ? "" : df.format(new Date(file.lastModified())))
-      return "Key: $key, File: $file ($lastModified), URL: $url ($result), hits: ${browser}/$bot"
+      return "Key: $key, File: $file ($lastModified), URL: $url (${result.join(',')}), hits: ${browser}/$bot"
     }
   }
 }
