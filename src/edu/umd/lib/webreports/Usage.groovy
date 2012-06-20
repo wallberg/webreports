@@ -152,6 +152,8 @@ Statistics:
    * Read log lines from each log file.
    */
 
+  final static Pattern parser = ~/^([^ ]+?) ([^ ]+?) ([^ ]+?) \[(.*?)\] "(?:[A-Z]+? )?(.+?)(?: .+?)?(?<!\\)" (\d{3}) ([^ ]+) "(.*?)(?<!\\)" "(.*?)(?<!\\)"$/
+
   public static void processLogFiles() {
     // Process each log file
     logFileNames.each { fileName ->
@@ -175,7 +177,7 @@ Statistics:
         r.eachLine { line ->
           stat.lines++
 
-          Matcher m = (line =~ /^([^ ]+?) ([^ ]+?) ([^ ]+?) \[(.*?)\] "(?:[A-Z]+? )?(.+?)(?: .+?)?(?<!\\)" (\d{3}) ([^ ]+) "(.*?)(?<!\\)" "(.*?)(?<!\\)"$/)
+          Matcher m = parser.matcher(line)
 
           if (! m.matches()) {
             log.error("line doesn't match: ${line}")
