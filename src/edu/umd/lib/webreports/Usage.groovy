@@ -2,6 +2,8 @@ package edu.umd.lib.webreports
 
 import groovy.io.FileVisitResult;
 
+import java.net.URLDecoder
+
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import java.util.regex.Matcher
@@ -319,7 +321,7 @@ Statistics:
         url = url.substring(0,n)
       }
 
-      String key = url.toLowerCase()
+      String key = URLDecoder.decode(url,'UTF-8').toLowerCase()
       if (key.endsWith('/')) {
         key += "index.html"
       }
