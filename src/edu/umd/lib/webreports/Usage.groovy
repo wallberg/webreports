@@ -178,7 +178,7 @@ Statistics:
 
           if (! m.matches()) {
             log.error("line doesn't match: ${line}")
-            count.errors++
+            stat.errors++
           } else {
 
             def (all,host,foo0,foo1,date,url,code,bytes,referer,ua) = m[0]
