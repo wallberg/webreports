@@ -94,11 +94,14 @@ class Usage {
 
         Entry.entries.each { k,e ->
           log.debug(e)
-          List row = e.csvRow
-          w.println(row.collect { v -> '"' + v.replaceAll("\"","\"\"") + '"'}.join(','))
 
-          stat[row[0]]++
-          stat.rows++
+          if (e.file != null || e.result.any { it =~ /(2|3)\d\d/ }) {
+            List row = e.csvRow
+            w.println(row.collect { v -> '"' + v.replaceAll("\"","\"\"") + '"'}.join(','))
+
+            stat[row[0]]++
+            stat.rows++
+          }
         }
 
         w.close()
@@ -142,22 +145,22 @@ Statistics:
     log.info("traversing $dir")
 
     dir.traverse(
-    sort:   { a,b -> a.name<=>b.name },
-    preDir: { if (it.name in ignoreDirs) return FileVisitResult.SKIP_SUBTREE },
-    postDir: { stat.dirs++ },
-    ) { file ->
+        sort:   { a,b -> a.name<=>b.name },
+        preDir: { if (it.name in ignoreDirs) return FileVisitResult.SKIP_SUBTREE },
+        postDir: { stat.dirs++ },
+        ) { file ->
 
-      if (file.isDirectory() || file.name in ignoreFiles) {
-        return
-      }
+          if (file.isDirectory() || file.name in ignoreFiles) {
+            return
+          }
 
-      stat.dirfiles++
+          stat.dirfiles++
 
-      Entry e = new Entry()
-      e.file = file
+          Entry e = new Entry()
+          e.file = file
 
-      Entry.add(file)
-    }
+          Entry.add(file)
+        }
   }
 
   /**
@@ -205,7 +208,7 @@ Statistics:
 
               // url fixup
               String normUrl = url
-              .replaceAll(/\?.*$/,'')
+                  .replaceAll(/\?.*$/,'')
               //                  .toLowerCase()
 
               //              // filter
