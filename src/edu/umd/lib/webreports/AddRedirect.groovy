@@ -54,6 +54,8 @@ class AddRedirect {
   public static void main(args) {
     try {
 
+      HttpURLConnection.followRedirects = false
+      
       // Get command line options
       parseCommandLine(args)
 
@@ -65,27 +67,32 @@ class AddRedirect {
 
       boolean first = true
 
+      log.info("reading $infile")
+
       r.eachLine { line ->
         stat.read++
 
-        List row = line.split(/,(?=([^\"]*\"[^\"]*\")*[^\"]*$)/,-1)
+        List row = line.split(/,(?=([^\"]*\"[^\"]*\")*[^\"]*$)/,-1).collect {
+          def m = (it =~ /^"?(.*?)"?$/)
+          m[0][1]
+        }
 
         String redirectsTo = ''
         if (first) {
           redirectsTo = 'Redirects to'
           first = false
         } else {
-          List results = row[4].substring(1,row[4].length()-1).split(/,/)
+          List results = row[4].split(/,/)
 
           if (results.any { it =~ /3\d\d/ }) {
             stat.redirect++
-            redirectsTo = 'redirect'
+            redirectsTo =  getRedirectTo(row[3])
           }
         }
 
-        row << '"' + redirectsTo.replaceAll("\"","\"\"") + '"'
+        row << redirectsTo.replaceAll("\"","\"\"")
 
-        w.println(row.join(','))
+        w.println(row.collect { '"' + it + '"' }.join(','))
       }
 
       r.close()
@@ -107,6 +114,37 @@ Statistics:
     }
 
     System.exit(0)
+  }
+
+  /**
+   * Check the web server for a redirect value
+   */
+
+  static String getRedirectTo(path) {
+
+    try {
+      URL url = new URL("http","www.lib.umd.edu",path)
+      log.info("checking $url")
+      
+      HttpURLConnection h = url.openConnection()
+      h.requestMethod = 'HEAD'
+      h.connectTimeout = 10000
+
+      h.connect()
+      log.info("response: " + h.responseCode)
+
+      if (h.responseCode in (300..399) && h.headerFields.Location) {
+        stat.add++
+        URL redirectTo = new URL(h.headerFields['Location'][0])
+        log.info("redirects to: $redirectTo")
+        return redirectTo.path
+      }
+    }
+    catch (Exception e) {
+      e.printStackTrace()
+    }
+
+    return ''
   }
 
   /*
