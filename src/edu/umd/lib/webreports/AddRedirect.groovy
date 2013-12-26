@@ -18,7 +18,6 @@ import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.PosixParser
 
-@Grab('log4j:log4j:1.2.16')
 import org.apache.log4j.Logger
 import org.apache.log4j.PatternLayout
 import org.apache.log4j.ConsoleAppender

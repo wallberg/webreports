@@ -2,20 +2,16 @@ package edu.umd.lib.webreports
 
 import java.security.*
 
-@Grab('dom4j:dom4j:1.4')
 import org.dom4j.*
 import org.dom4j.io.*
 
-@Grab('commons-lang:commons-lang:2.5')
 import org.apache.commons.lang.StringUtils
 
-@Grab('commons-httpclient:commons-httpclient:3.1')
 import org.apache.commons.httpclient.*
 import org.apache.commons.httpclient.methods.*
 import org.apache.commons.httpclient.methods.multipart.*
 import org.apache.commons.httpclient.params.*
 
-@Grab('log4j:log4j:1.2.16')
 import org.apache.log4j.Logger
 
 

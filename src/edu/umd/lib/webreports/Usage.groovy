@@ -2,31 +2,23 @@ package edu.umd.lib.webreports
 
 import groovy.io.FileVisitResult;
 
-import java.net.URLDecoder
-
 import java.util.zip.GZIPInputStream
-import java.util.zip.GZIPOutputStream
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import java.util.TreeMap
+
+import org.apache.commons.cli.PosixParser
+import org.apache.commons.cli.CommandLine
+import org.apache.commons.cli.Options
+import org.apache.commons.cli.Option
+import org.apache.commons.cli.HelpFormatter
 
 import java.text.SimpleDateFormat
 
-import org.apache.commons.cli.CommandLine
-import org.apache.commons.cli.HelpFormatter
-import org.apache.commons.cli.Option
-import org.apache.commons.cli.Options
-import org.apache.commons.cli.PosixParser
-
-@Grab('log4j:log4j:1.2.16')
 import org.apache.log4j.Logger
-import org.apache.log4j.PatternLayout
-import org.apache.log4j.ConsoleAppender
-import org.apache.log4j.Priority
 
 /**
  * Generate usage for report for /www files combined with urls from apache logs.
- * 
+ *
  * Report CSV file fields:
  * <pre>
  *   File
@@ -37,7 +29,7 @@ import org.apache.log4j.Priority
  *   hits/browser
  *   hits/bot
  * </pre>
- * 
+ *
  * @author wallberg
  *
  */
@@ -120,7 +112,7 @@ Statistics:
     files:        ${stat.dirfiles}
 
   log files
-    files read:   ${stat.files} 
+    files read:   ${stat.files}
     lines read:   ${stat.lines}
     parse errors: ${stat.errors}
 
