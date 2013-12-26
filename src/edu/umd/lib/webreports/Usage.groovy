@@ -82,7 +82,7 @@ class Usage {
         PrintWriter w = new PrintWriter(new FileOutputStream(csv))
 
         // header
-        w.println('"Match Type","File","Last Modified","URL","Result Codes","Total Hits","Browser Hits","Bot Hits"')
+        w.println('"Match Type","File","Last Modified","URL","Total Hits","Browser Hits","Bot Hits"')
 
         Entry.entries.each { k,e ->
           log.debug(e)
@@ -127,7 +127,13 @@ Statistics:
     System.exit(0)
   }
 
-  static final Set ignoreDirs = ['_baks','_notes','.DS_Store','JUNK','blogs','staff','old_projects','.svn','DB'] as Set
+  static final Set ignoreDirs = [
+    'stats',
+    '.trellix',
+    'home_files',
+    'drupal',
+    'wordpress',
+    '_notes'] as Set
   static final Set ignoreFiles = [] as Set
 
   /**
@@ -160,7 +166,7 @@ Statistics:
    */
 
   final static Pattern parser = ~/^([^ ]+?) ([^ ]+?) ([^ ]+?) \[(.*?)\] "(?:[A-Z]+? )?(.+?)(?: .+?)?(?<!\\)" (\d{3}) ([^ ]+) "(.*?)(?<!\\)" "(.*?)(?<!\\)"$/
-  final static Pattern ignoreUrls = ~/(^\/(archivesum|blogs|cgi-bin|digital|drum)|(\/JUNK\/))/
+  final static Pattern ignoreUrls = ~/(^\/\/?(home_files|archivesum|blogs|cgi-bin|digital|drum)|(\/JUNK\/))/
 
   public static void processLogFiles() {
     // Process each log file
@@ -201,6 +207,7 @@ Statistics:
               // url fixup
               String normUrl = url
                   .replaceAll(/\?.*$/,'')
+                  .replaceAll(/\/\//,'/')
               //                  .toLowerCase()
 
               //              // filter
@@ -301,7 +308,7 @@ Statistics:
 
     static void add(File file) {
       Entry e = new Entry()
-      e.key = file.absolutePath.replace('/www','').toLowerCase()
+      e.key = file.absolutePath.replace('/Users/wallberg/Documents/RHSPipeband','').toLowerCase()
       e.file = file
       entries[e.key] = e
     }
@@ -320,7 +327,7 @@ Statistics:
         key = url
       }
 
-      key = key.toLowerCase()
+      key = key.toLowerCase().replaceAll(/\/\//,'/')
 
       if (key.endsWith('/')) {
         key += "index.html"
@@ -353,10 +360,9 @@ Statistics:
     public List getCsvRow() {
       return [
         ((file != null) ? (url != null ? "matched" : "fileonly") : "urlonly"),
-        (file == null ? "" : file.absolutePath.replace('/www','')),
+        (file == null ? "" : file.absolutePath.replace('/Users/wallberg/Documents/RHSPipeband/','')),
         (file == null ? "" : df.format(new Date(file.lastModified()))),
         url ?: "",
-        result.join(','),
         "${browser + bot}",
         "$browser",
         "$bot",

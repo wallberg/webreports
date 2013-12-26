@@ -122,7 +122,7 @@ Statistics:
   static String getRedirectTo(path) {
 
     try {
-      URL url = new URL("http","www.lib.umd.edu",path)
+      URL url = new URL("http","rhspipeband.org",path)
       log.info("checking $url")
       
       HttpURLConnection h = url.openConnection()
